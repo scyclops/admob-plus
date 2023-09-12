@@ -1,19 +1,28 @@
 {
-  "name": "admob-plus-cordova",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": ".",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "cordova-plus plugin build --input=./src/www/admob.ts --lib --esm",
-        "cwd": "packages/cordova"
+        "command": "tsc -b --verbose"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "lerna run test"
       },
-      "dependsOn": ["clean"],
-      "outputs": [
-        "{workspaceRoot}/esm",
-        "{workspaceRoot}/lib",
-        "{workspaceRoot}/www"
-      ]
+      "dependsOn": ["jest"]
+    },
+    "jest": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [],
+      "options": {
+        "jestConfig": "jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   }
 }
