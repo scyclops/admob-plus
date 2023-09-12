@@ -11,6 +11,8 @@ class AMBPlugin: CDVPlugin {
 
     var readyCallbackId: String!
 
+    var currentCtx: AMBContext?
+
     deinit {
         readyCallbackId = nil
     }
@@ -109,12 +111,26 @@ class AMBPlugin: CDVPlugin {
 
         DispatchQueue.main.async {
             if let adClass = ctx.optString("cls") {
+
+                var ctxUsed: Bool = false
+
                 var ad: AMBCoreAd?
                 switch adClass {
                 case "AppOpenAd":
                     ad = AMBAppOpenAd(ctx)
                 case "BannerAd":
+
+                    if let oldAd = self.currentCtx?.optAdOrError() as? AMBAdBase {
+                        oldAd.hide(ctx)
+                        // above calls ctx.resolve so we make sure not to call ctx.resolve or reject later
+                        // even though that may mean that we miss out on errors
+                        ctxUsed = true
+                    }
+
                     ad = AMBBanner(ctx)
+
+                    self.currentCtx = ctx
+
                 case "InterstitialAd":
                     ad = AMBInterstitial(ctx)
                 case "NativeAd":
@@ -126,10 +142,12 @@ class AMBPlugin: CDVPlugin {
                 default:
                     break
                 }
-                if ad != nil {
-                    ctx.resolve()
-                } else {
-                    ctx.reject("fail to create ad: \(ctx.optId() ?? "-")")
+                if !ctxUsed {
+                    if ad != nil {
+                        ctx.resolve()
+                    } else {
+                        ctx.reject("fail to create ad: \(ctx.optId() ?? "-")")
+                    }
                 }
             } else {
                 ctx.reject()
